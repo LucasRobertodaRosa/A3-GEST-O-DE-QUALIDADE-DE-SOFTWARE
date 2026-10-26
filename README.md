@@ -42,3 +42,16 @@ CRUD
 • Read: Consultar relatórios e estoque.
 • Update: Atualizar informações dos produtos ou entradas.
 • Delete
+
+
+controle-estoque/
+├── src/
+│   ├── main.py
+│   ├── produtos.py
+│   ├── movimentacoes.py
+│   └── banco.py
+├── tests/
+│   ├── test_produtos.py
+│   └── test_movimentacoes.py
+├── requirements.txt
+└── README.md
