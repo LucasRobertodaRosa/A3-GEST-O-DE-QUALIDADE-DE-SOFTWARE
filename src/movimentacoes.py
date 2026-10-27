@@ -116,3 +116,72 @@ def registrar_entrada(
     finally:
         if deve_fechar:
             conn.close()
+def registrar_saida(
+    id_produto,
+    quantidade,
+    destinatario,
+    data_saida=None,
+    conexao=None,
+):
+    """
+    Registra uma saída do estoque e atualiza
+    a quantidade disponível do produto.
+
+    Nesta etapa ainda não é feita a validação
+    de saldo suficiente. Ela será adicionada
+    no próximo commit.
+
+    Retorna o ID da saída criada.
+    """
+
+    _validar_quantidade(quantidade)
+
+    if not destinatario or not str(destinatario).strip():
+        raise ValueError("O destinatário deve ser informado.")
+
+    conn, deve_fechar = _obter_conexao(conexao)
+
+    try:
+        if not _produto_existe(conn, id_produto):
+            raise ValueError("Produto não encontrado.")
+
+        data_saida = data_saida or _data_atual()
+
+        with conn:
+
+            cursor = conn.execute(
+                """
+                INSERT INTO saidas
+                (
+                    id_produto,
+                    quantidade,
+                    data_saida,
+                    destinatario
+                )
+                VALUES (?, ?, ?, ?)
+                """,
+                (
+                    id_produto,
+                    quantidade,
+                    data_saida,
+                    str(destinatario).strip(),
+                ),
+            )
+
+            conn.execute(
+                """
+                UPDATE produtos
+                SET quantidade = quantidade - ?
+                WHERE id = ?
+                """,
+                (
+                    quantidade,
+                    id_produto,
+                ),
+            )
+
+        return cursor.lastrowid
+
+    finally:
+        if deve_fechar:
+            conn.close()
