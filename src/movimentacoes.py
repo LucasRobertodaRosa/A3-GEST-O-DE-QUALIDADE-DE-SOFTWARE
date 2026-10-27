@@ -127,9 +127,8 @@ def registrar_saida(
     Registra uma saída do estoque e atualiza
     a quantidade disponível do produto.
 
-    Nesta etapa ainda não é feita a validação
-    de saldo suficiente. Ela será adicionada
-    no próximo commit.
+    Impede a saída quando não houver estoque
+    suficiente.
 
     Retorna o ID da saída criada.
     """
@@ -142,8 +141,27 @@ def registrar_saida(
     conn, deve_fechar = _obter_conexao(conexao)
 
     try:
-        if not _produto_existe(conn, id_produto):
+        cursor = conn.execute(
+            """
+            SELECT quantidade
+            FROM produtos
+            WHERE id = ?
+            """,
+            (id_produto,),
+        )
+
+        produto = cursor.fetchone()
+
+        if produto is None:
             raise ValueError("Produto não encontrado.")
+
+        saldo_disponivel = produto[0]
+
+        if quantidade > saldo_disponivel:
+            raise ValueError(
+                f"Estoque insuficiente. "
+                f"Disponível: {saldo_disponivel}."
+            )
 
         data_saida = data_saida or _data_atual()
 
